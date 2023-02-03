@@ -7,7 +7,7 @@ looker.plugins.visualizations.add({
       type: 'string', // string, number, boolean, array
       label: 'Title',
       // default: '',
-      display: 'text', // type = string: (text, select, radio);  type = number: (number, range), type = array: (text, color, colors)
+      display: 'text', // type = string: (text, select, radio) || type = number: (number, range) || type = array: (text, color, colors)
       placeholder: 'Title',
       // values: [{ }]
       // min: 0
@@ -17,6 +17,14 @@ looker.plugins.visualizations.add({
       order: 1,
       display_size: 'normal', // normal, half, third
     },
+    titleColor: {
+      type: 'array',
+      label: 'Title Color',
+      default: '#000000',
+      display: 'color',
+      section: 'Settings',
+      order: 2,
+    },
     numCategories: {
       type: 'number',
       label: '# of Categories',
@@ -25,8 +33,7 @@ looker.plugins.visualizations.add({
       min: 0,
       step: 1,
       section: 'Categories',
-      order: 2,
-      display_size: 'normal',
+      order: 1,
     },
   },
 
@@ -43,17 +50,21 @@ looker.plugins.visualizations.add({
 
     const { dimension_like, measure_like, table_calculations } = queryResponse.fields
 
+    // Return error if invalid query response
     if (dimension_like.length != 1 || measure_like.length != 1 || table_calculations.length !== 1) {
       this.addError({
         title: 'Invalid query response.',
         message: 'One dimension, one measure, and one table calculation are required.',
       })
+      return
     }
 
-    if (config.title) {
-      document.getElementById('title').innerHTML = config.title
-    }
+    // Update title based on config settings
+    const title = document.getElementById('title')
+    title.innerHTML = config.title ?? ''
+    title.style.color = config.titleColor ?? '#000000'
 
+    // Transform data
     const seriesData = data.slice(0, config.numCategories ?? 10)
     const categoryFieldName = dimension_like[0].name
     const randomFieldName = table_calculations[0].name
@@ -61,6 +72,8 @@ looker.plugins.visualizations.add({
     const categories = seriesData.map((d) => d[categoryFieldName].value)
     const randomValues = seriesData.map((d) => d[randomFieldName].value)
     const incidents = seriesData.map((d) => d[incidentFieldName].value)
+
+    // Build chart
     const chart = Highcharts.chart('viz-container', {
       title: '',
       chart: {
