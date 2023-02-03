@@ -1,0 +1,8 @@
+.DS_Store
+node_modules/
+*.code-workspace
+compile
+docs/testing.md
+server/static
+server/cert.pem
+server/key.pem
