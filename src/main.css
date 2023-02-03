@@ -1,16 +1,13 @@
-@font-face {
-  font-family: 'Raleway';
-  src: url('./fonts/Raleway-Regular.ttf') format('ttf');
-}
-
-@font-face {
-  font-family: 'Raleway Bold';
-  src: url('./fonts/Raleway-Bold.ttf') format('ttf');
+.top-bar {
+  display: flex;
+  margin-bottom: 20px;
+  justify-content: space-between;
 }
 
 .title {
+  margin: 0;
   font-size: 18px;
   font-weight: normal;
-  font-family: 'Raleway Bold';
+  font-family: 'Google Sans';
   text-align: center;
 }
