@@ -1,7 +1,21 @@
 import Highcharts from 'highcharts'
-import css from './main.css'
+import {
+  Cell,
+  Link,
+  Looker,
+  LookerChartUtils,
+  VisConfig,
+  VisData,
+  VisQueryResponse,
+  Visualization,
+  VisUpdateDetails,
+} from './types'
+const css = require('./main.css')
 
-looker.plugins.visualizations.add({
+declare const looker: Looker
+declare const LookerCharts: LookerChartUtils
+
+const vis: Visualization = {
   options: {
     title: {
       type: 'string', // string, number, boolean, array
@@ -75,7 +89,14 @@ looker.plugins.visualizations.add({
    * @param done A callback to indicate that the visualization is fully rendered. This is especially important to call if your visualization needs to perform asynchronous calls or needs to be rendered as a PDF.
    * @returns
    */
-  updateAsync: function (data, element, config, queryResponse, details, done) {
+  updateAsync: function (
+    data: VisData,
+    element: HTMLElement,
+    config: VisConfig,
+    queryResponse: VisQueryResponse,
+    details: VisUpdateDetails,
+    done: () => void
+  ) {
     this.clearErrors()
 
     const { dimensions, measures, table_calculations } = queryResponse.fields
@@ -99,15 +120,16 @@ looker.plugins.visualizations.add({
     const categoryFieldName = dimensions[0].name
     const randomFieldName = table_calculations[0].name
     const incidentFieldName = measures[0].name
-    const categories = seriesData.map((d) => LookerCharts.Utils.textForCell(d[categoryFieldName]))
+    const categories = seriesData.map((d) => LookerCharts.Utils.textForCell(d[categoryFieldName] as Cell))
     const randomValues = seriesData.map((d) => d[randomFieldName].value)
     const incidents = seriesData.map((d) => d[incidentFieldName].value)
 
     document.getElementById('drill-field-example').innerHTML = LookerCharts.Utils.htmlForCell(
-      data[0][incidentFieldName]
+      data[0][incidentFieldName] as Cell
     )
 
     // Build chart
+    // @ts-ignore
     const chart = Highcharts.chart('viz-container', {
       title: '',
       chart: {
@@ -130,7 +152,7 @@ looker.plugins.visualizations.add({
               const { index } = e.point
 
               LookerCharts.Utils.openDrillMenu({
-                links: data[index][incidentFieldName].links,
+                links: data[index][incidentFieldName].links as Link[],
                 event: e,
               })
             },
@@ -150,22 +172,25 @@ looker.plugins.visualizations.add({
     })
 
     // Add cross filter functionality to x-axis labels
+    // @ts-ignore
     chart.xAxis[0].labelGroup.element.childNodes.forEach((label) => {
       label.style.cursor = 'pointer'
-      label.onclick = function (e) {
+      label.onclick = function (e: any) {
         const selectedCategory = this.textContent
         const category = data.filter((d) => d[categoryFieldName].value === selectedCategory)[0][categoryFieldName]
-        // if (details.crossfilterEnabled) {
-        LookerCharts.Utils.toggleCrossfilter({
-          row: {
-            [categoryFieldName]: category,
-          },
-          event: e,
-        })
-        // }
+        if (details.crossfilterEnabled) {
+          LookerCharts.Utils.toggleCrossfilter({
+            row: {
+              [categoryFieldName]: category,
+            },
+            event: e,
+          })
+        }
       }
     })
 
     done()
   },
-})
+}
+
+looker.plugins.visualizations.add(vis)
